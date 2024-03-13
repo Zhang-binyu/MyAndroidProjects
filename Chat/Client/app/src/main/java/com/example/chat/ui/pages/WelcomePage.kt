@@ -1,0 +1,150 @@
+package com.example.chat.ui.pages
+
+import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.chat.viewmodel.MainViewModel
+import kotlinx.coroutines.delay
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WelcomePage(
+    navigationController: NavController,
+    mainViewModel: MainViewModel
+) {
+    // Create a variable to deposit the server address.
+    var inputWebSocketAddress by remember {
+        mutableStateOf("192.168.1.107:8080/")
+    }
+
+    // Create a variable to deposit the user name.
+    var userName by remember {
+        mutableStateOf("Example")
+    }
+
+    // Instantiate a object to get the context
+    val context = LocalContext.current
+
+    // Define a value to record the connection status.
+    val connectionStatus by mainViewModel.isConnected.collectAsState()
+    
+    Scaffold(
+        topBar = {
+            TopAppBar(title = {
+                Text(text = "Welcome!", fontSize = 24.sp)
+            })
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(modifier = Modifier.fillMaxWidth(0.8f), text = "Server address:", fontSize = 16.sp)
+                Card(
+                    modifier = Modifier.fillMaxWidth(0.8f)
+                ){
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp),
+                    ) {
+                        OutlinedTextField(
+                            value = inputWebSocketAddress,
+                            onValueChange = {inputWebSocketAddress = it}
+                        )
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(modifier = Modifier.fillMaxWidth(0.8f), text = "What's your name?", fontSize = 16.sp)
+                Card(
+                    modifier = Modifier.fillMaxWidth(0.8f)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        OutlinedTextField(
+                            value = userName,
+                            onValueChange = { userName = it }
+                        )
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 32.dp, end = 32.dp),
+                horizontalAlignment = Alignment.End
+            ) {
+                IconButton(
+                    modifier = Modifier.padding(end = 24.dp),
+                    onClick = {
+                        when{
+                            inputWebSocketAddress.isEmpty() && userName.isEmpty() -> Toast.makeText(context,"The server address and the user name cannot be empty!",Toast.LENGTH_SHORT).show()
+                            inputWebSocketAddress.isEmpty() -> Toast.makeText(context,"The server address cannot be empty!",Toast.LENGTH_SHORT).show()
+                            userName.isEmpty() -> Toast.makeText(context,"The user name cannot be empty!",Toast.LENGTH_SHORT).show()
+                            inputWebSocketAddress.isNotEmpty() && userName.isNotEmpty() -> {
+                                mainViewModel.webSocketService.userName = userName
+                                mainViewModel.webSocketService.serverAddress = inputWebSocketAddress
+
+                                mainViewModel.connectToTheServer()
+                            }
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowRight,
+                        contentDescription = null
+                    )
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(connectionStatus){
+        if (connectionStatus){
+            navigationController.navigate("LobbyScreen")
+            Toast.makeText(context,"Successfully connected to the server!",Toast.LENGTH_SHORT).show()
+        }
+    }
+}
