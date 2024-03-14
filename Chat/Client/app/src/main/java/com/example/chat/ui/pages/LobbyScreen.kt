@@ -2,6 +2,7 @@ package com.example.chat.ui.pages
 
 import android.annotation.SuppressLint
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,6 +59,15 @@ fun LobbyScreen(
     // Define a value to record the message list.
     val messageList by mainViewModel.messageList.collectAsState(emptyList())
 
+    // Define a value to record the connection status.
+    val connectionStatus by mainViewModel.isConnected.collectAsState()
+
+    // Define a value to record the other senders' names.
+    val senderName by mainViewModel.senderName.collectAsState()
+
+    // Define a value to record the user name.
+    val userName by mainViewModel.userName.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -70,12 +81,6 @@ fun LobbyScreen(
 
                         IconButton(onClick = {
                             mainViewModel.closeConnection()
-                            Toast.makeText(context,mainViewModel.webSocketService.userName + " has already left the lobby.",Toast.LENGTH_SHORT).show()
-                            navigationController.navigate("WelcomePage"){
-                                popUpTo("WelcomePage"){
-                                    inclusive = true
-                                }
-                            }
                         }) {
                             Image(imageVector = Icons.Default.ExitToApp, contentDescription = null)
                         }
@@ -101,7 +106,7 @@ fun LobbyScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = if (message.isReceivedMessage) Arrangement.Start else Arrangement.End
                                     ) {
-                                        Text(text = if (message.isReceivedMessage) "Server" else mainViewModel.webSocketService.userName)
+                                        Text(text = if (message.isReceivedMessage) senderName else userName)
                                     }
                                     
                                     Row(
@@ -129,8 +134,6 @@ fun LobbyScreen(
                                         }
                                     }
                                 }
-                                
-                                
                             }
                         }
                     }
@@ -151,7 +154,7 @@ fun LobbyScreen(
                     IconButton(
                         onClick = {
                             if (editMessage.isNotEmpty()) {
-                                mainViewModel.sendMessage(editMessage)
+                                mainViewModel.sendMessage("$userName:$editMessage")
                                 editMessage = ""
                             }else{
                                 Toast.makeText(context,"Message cannot be empty!",Toast.LENGTH_SHORT).show()
@@ -164,4 +167,22 @@ fun LobbyScreen(
             }
         }
     )
+
+    // Listen for the return key.
+    BackHandler(enabled = true) {
+        mainViewModel.closeConnection()
+    }
+
+    // Handle the connection.
+    LaunchedEffect(connectionStatus){
+        if (!connectionStatus){
+            Toast.makeText(context,"Connection closed.",Toast.LENGTH_SHORT).show()
+            navigationController.navigate("WelcomePage"){
+                popUpTo("WelcomePage"){
+                    inclusive = true
+                }
+            }
+        }
+
+    }
 }

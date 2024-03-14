@@ -8,6 +8,8 @@ class MainViewModel : ViewModel() {
 
     val isConnected = webSocketService.isConnected
     val messageList = webSocketService.messages
+    val senderName = webSocketService.senderName
+    val userName = webSocketService.userName
 
     override fun onCleared() {
         super.onCleared()
@@ -24,5 +26,9 @@ class MainViewModel : ViewModel() {
 
     fun closeConnection(){
         webSocketService.closeConnection()
+    }
+
+    fun setUserName(newUserName:String){
+        webSocketService.setUserName(newUserName)
     }
 }

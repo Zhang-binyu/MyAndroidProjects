@@ -1,6 +1,10 @@
 package com.example.chat.ui.pages
 
+import android.app.Activity
+import android.os.Handler
+import android.os.Looper
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.chat.viewmodel.MainViewModel
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,7 +43,7 @@ fun WelcomePage(
 ) {
     // Create a variable to deposit the server address.
     var inputWebSocketAddress by remember {
-        mutableStateOf("192.168.1.107:8080/")
+        mutableStateOf("192.168.5.9:8080/")
     }
 
     // Create a variable to deposit the user name.
@@ -124,7 +127,7 @@ fun WelcomePage(
                             inputWebSocketAddress.isEmpty() -> Toast.makeText(context,"The server address cannot be empty!",Toast.LENGTH_SHORT).show()
                             userName.isEmpty() -> Toast.makeText(context,"The user name cannot be empty!",Toast.LENGTH_SHORT).show()
                             inputWebSocketAddress.isNotEmpty() && userName.isNotEmpty() -> {
-                                mainViewModel.webSocketService.userName = userName
+                                mainViewModel.setUserName(userName)
                                 mainViewModel.webSocketService.serverAddress = inputWebSocketAddress
 
                                 mainViewModel.connectToTheServer()
@@ -141,6 +144,27 @@ fun WelcomePage(
         }
     }
 
+    // Define a variable to record the accounts of operations returned.
+    var userBackHandler = 0
+
+    // Define a variable makes it easier for us to finish the activity.
+    val activity = context as? Activity ?: return
+
+    // Listen for the return key.
+    BackHandler(enabled = true) {
+        if (userBackHandler == 0){
+            Toast.makeText(context,"Press again to exit.",Toast.LENGTH_SHORT).show()
+            userBackHandler++
+
+            Handler(Looper.getMainLooper()).postDelayed({
+                userBackHandler = 0
+            }, 2000)
+        }else{
+            activity.finish()
+        }
+    }
+
+    // Handle the connection.
     LaunchedEffect(connectionStatus){
         if (connectionStatus){
             navigationController.navigate("LobbyScreen")
