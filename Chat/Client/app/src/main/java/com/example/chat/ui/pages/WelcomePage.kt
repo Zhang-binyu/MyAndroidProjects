@@ -5,17 +5,18 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -43,7 +44,7 @@ fun WelcomePage(
 ) {
     // Create a variable to deposit the server address.
     var inputWebSocketAddress by remember {
-        mutableStateOf("192.168.5.9:8080/")
+        mutableStateOf("110.41.54.8:8080/")
     }
 
     // Create a variable to deposit the user name.
@@ -60,8 +61,32 @@ fun WelcomePage(
     Scaffold(
         topBar = {
             TopAppBar(title = {
-                Text(text = "Welcome!", fontSize = 24.sp)
+                Text(text = "Welcome!", fontSize = 36.sp)
             })
+        },
+        floatingActionButton = {
+            Card(
+                modifier = Modifier
+                    .clickable {
+                        when{
+                            inputWebSocketAddress.isEmpty() && userName.isEmpty() -> Toast.makeText(context,"The server address and the user name cannot be empty!",Toast.LENGTH_SHORT).show()
+                            inputWebSocketAddress.isEmpty() -> Toast.makeText(context,"The server address cannot be empty!",Toast.LENGTH_SHORT).show()
+                            userName.isEmpty() -> Toast.makeText(context,"The user name cannot be empty!",Toast.LENGTH_SHORT).show()
+                            inputWebSocketAddress.isNotEmpty() && userName.isNotEmpty() -> {
+                                mainViewModel.setUserName(userName)
+                                mainViewModel.webSocketService.serverAddress = inputWebSocketAddress
+
+                                mainViewModel.connectToTheServer()
+                            }
+                        }
+                    }
+            ) {
+                Icon(
+                    modifier = Modifier.padding(16.dp).size(32.dp),
+                    imageVector = Icons.Filled.ArrowForward,
+                    contentDescription = null
+                )
+            }
         }
     ) { paddingValues ->
         Column(
@@ -110,35 +135,6 @@ fun WelcomePage(
                             onValueChange = { userName = it }
                         )
                     }
-                }
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 32.dp, end = 32.dp),
-                horizontalAlignment = Alignment.End
-            ) {
-                IconButton(
-                    modifier = Modifier.padding(end = 24.dp),
-                    onClick = {
-                        when{
-                            inputWebSocketAddress.isEmpty() && userName.isEmpty() -> Toast.makeText(context,"The server address and the user name cannot be empty!",Toast.LENGTH_SHORT).show()
-                            inputWebSocketAddress.isEmpty() -> Toast.makeText(context,"The server address cannot be empty!",Toast.LENGTH_SHORT).show()
-                            userName.isEmpty() -> Toast.makeText(context,"The user name cannot be empty!",Toast.LENGTH_SHORT).show()
-                            inputWebSocketAddress.isNotEmpty() && userName.isNotEmpty() -> {
-                                mainViewModel.setUserName(userName)
-                                mainViewModel.webSocketService.serverAddress = inputWebSocketAddress
-
-                                mainViewModel.connectToTheServer()
-                            }
-                        }
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowRight,
-                        contentDescription = null
-                    )
                 }
             }
         }

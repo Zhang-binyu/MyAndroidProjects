@@ -3,10 +3,11 @@ package com.example.chat.ui.pages
 import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,13 +15,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -77,12 +77,22 @@ fun LobbyScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "Lobby", fontSize = 24.sp)
+                        Text(text = "Lobby", fontSize = 36.sp)
 
-                        IconButton(onClick = {
-                            mainViewModel.closeConnection()
-                        }) {
-                            Image(imageVector = Icons.Default.ExitToApp, contentDescription = null)
+                        Card(
+                            modifier = Modifier
+                                .padding(top = 8.dp, end = 8.dp)
+                                .clickable {
+                                    mainViewModel.closeConnection()
+                                }
+                        ) {
+                            Icon(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .size(24.dp),
+                                imageVector = Icons.Default.Close,
+                                contentDescription = null
+                            )
                         }
                     }
                 }
@@ -92,11 +102,15 @@ fun LobbyScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
+                    .padding(
+                        paddingValues
+                    ),
+                verticalArrangement = Arrangement.SpaceEvenly
             ) {
                 LazyColumn(
                     modifier = Modifier
-                        .size(650.dp)
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.9f)
                         .padding(20.dp),
                     content = {
                         items(messageList){message ->
@@ -140,29 +154,43 @@ fun LobbyScreen(
                 )
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceAround,
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(0.9f),
+                        trailingIcon = {
+                            Card(
+                                modifier = Modifier
+                                    .padding(end = 8.dp)
+                                    .clickable {
+                                        if (editMessage.isNotEmpty()) {
+                                            mainViewModel.sendMessage("$userName:$editMessage")
+                                            editMessage = ""
+                                        } else {
+                                            Toast
+                                                .makeText(
+                                                    context,
+                                                    "Message cannot be empty!",
+                                                    Toast.LENGTH_SHORT
+                                                )
+                                                .show()
+                                        }
+                                    }
+                            ) {
+                                Icon(
+                                    modifier = Modifier
+                                        .padding(12.dp)
+                                        .size(20.dp),
+                                    imageVector = Icons.Default.Send,
+                                    contentDescription = null
+                                )
+                            }
+                        },
                         value = editMessage,
                         onValueChange = { editMessage = it },
-                        placeholder = {
-                            Text(text = "Write your message here,please.")
-                        }
                     )
-                    IconButton(
-                        onClick = {
-                            if (editMessage.isNotEmpty()) {
-                                mainViewModel.sendMessage("$userName:$editMessage")
-                                editMessage = ""
-                            }else{
-                                Toast.makeText(context,"Message cannot be empty!",Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    ) {
-                        Icon(imageVector = Icons.Default.Send, contentDescription = null)
-                    }
                 }
             }
         }
